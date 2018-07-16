@@ -9,3 +9,9 @@ def room(request, room_name):
     return render(request, 'draw/room.html', {
         'room_name_json': mark_safe(json.dumps(room_name))
     })
+
+def maindisplay(request):
+  return render(request, 'draw/maindisplay.html', {})
+
+def mobiledisplay(request):
+  return render(request, 'draw/mobiledisplay.html', {})

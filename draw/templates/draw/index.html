@@ -19,7 +19,6 @@
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
 </body>
 <script>
-
     // setting up the canvas and one paper tool
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
@@ -27,10 +26,77 @@
 
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
+   
+    //From https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+    function getParameterByName(name) {
+      var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+      return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+     }
+  
+    var size = getParameterByName("size");
+  
+  
+    var socket = new WebSocket('ws://p4-brandonfang-brandonfang847771.codeanyapp.com:8765/');
+  
+    var line;
+    var color = "#"+((1<<24)*Math.random()|0).toString(16);
+    line = new paper.Path();
+    line.strokeColor = color;
+    var line2;
+    line2 = new paper.Path();
+    var line3;
+    line3 = new paper.Path();
+    var two = "none";
+  
+    var identity = Math.random().toString(36).substring(7);
+    tool.onMouseMove = function(event) {
+      if (size != "large") {
+        socket.send('{"x":' + event.point.x + ', "y":' + event.point.y + ', "i":' + '"' + identity + '"' + ', "color":' + '"' + color + '"}')
+        line.add(new paper.Point(event.point.x, event.point.y));
+      //console.log(event.point.x)
+      //this.opacity = Math.random();
+      }
+    };
 
-    // var socket = new WebSocket(
-    //     'ws://your url here:8765/');
-
-
+  
+    socket.onmessage = function(receivedMessage) {
+      var msg = JSON.parse(receivedMessage.data);
+      if (msg.i != identity && size != "small") {
+        //console.log(identity);
+        //console.log(receivedMessage.id);
+        var x = msg.x;
+        var y = msg.y;
+        if (two == "none"){
+          two = msg.i;
+        }
+        if (two == msg.i) {
+          line2.strokeColor = msg.color;
+          line2.add(new paper.Point(x, y));
+        } if (two != msg.i) {
+          line3.strokeColor = msg.color;
+          line3.add(new paper.Point(x, y));
+        }
+      }
+    };
+  
+  window.ondevicemotion = function(event) {
+    if (event.acceleration.x > 9 || event.acceleration.y > 9 || event.acceleration.z > 9) {
+      paper.project.activeLayer.removeChildren();
+      line = new paper.Path();
+      line.strokeColor = color;
+      line2 = new paper.Path();
+      line3 = new paper.Path();
+    }
+  }
+  
+  function orientation(event) {
+    if (event.gamma > 70) {
+      line = new paper.Path();
+      line.strokeColor = "#"+((1<<24)*Math.random()|0).toString(16);
+    }
+  }
+  
+  window.addEventListener('deviceorientation', orientation);
+    
 </script>
 </html>
